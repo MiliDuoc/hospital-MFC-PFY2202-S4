@@ -1,4 +1,29 @@
-﻿const librosPorCategoria = {
+﻿import { http, HttpResponse, delay } from "msw"
+
+const categorias = [
+  {
+    id: "ficcion",
+    nombre: "Ficción",
+    descripcion: "Novelas y relatos de mundos imaginarios."
+  },
+  {
+    id: "ciencia-ficcion",
+    nombre: "Ciencia Ficción",
+    descripcion: "Historias de ciencia, tecnología y futuros posibles."
+  },
+  {
+    id: "misterio",
+    nombre: "Misterio",
+    descripcion: "Enigmas, investigaciones y suspenso."
+  },
+  {
+    id: "drama",
+    nombre: "Drama",
+    descripcion: "Historias centradas en conflictos humanos."
+  }
+]
+
+const librosPorCategoria = {
   ficcion: [
     {
       id: 1,
@@ -64,3 +89,42 @@
 
   drama: []
 }
+
+export const handlers = [
+  http.get("*/api/categorias", async () => {
+    await delay(900)
+    return HttpResponse.json(categorias)
+  }),
+
+  http.get("*/api/libros", async ({ request }) => {
+    await delay(1000)
+
+    const url = new URL(request.url)
+    const categoria = url.searchParams.get("categoria")
+    const simularError = url.searchParams.get("error")
+
+    if (simularError === "500") {
+      return HttpResponse.json(
+        {
+          mensaje:
+            "El servidor simulado no pudo procesar la solicitud."
+        },
+        { status: 500 }
+      )
+    }
+
+    if (!categoria || !(categoria in librosPorCategoria)) {
+      return HttpResponse.json(
+        {
+          mensaje:
+            "La categoría solicitada no existe."
+        },
+        { status: 404 }
+      )
+    }
+
+    return HttpResponse.json(
+      librosPorCategoria[categoria]
+    )
+  })
+]
